@@ -40,10 +40,10 @@ const BannerHome = () => {
         <div className='flex min-h-full max-h-[95vh] overflow-hidden'> 
             {
                 bannerData.map((data,index)=>{
-                    console.log("data",data);
+                    // console.log("data",data);
                     
                     return(
-                        <div key={index} className={`min-w-full min-h-[450px] lg:min-h-full overflow-hidden relative group ${isTransitioning ? 'transition-all' : ""} `} style={{transform : `translateX(-${currentImage * 100}%)`}}>
+                        <div key={data.id+"bannerHome"+index} className={`min-w-full min-h-[450px] lg:min-h-full overflow-hidden relative group ${isTransitioning ? 'transition-all' : ""} `} style={{transform : `translateX(-${currentImage * 100}%)`}}>
                             <div className='w-full h-full'>
                                 <img 
                                     src={imageURL+data.backdrop_path} 

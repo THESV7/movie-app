@@ -24,7 +24,7 @@ const Header = () => {
   }
 
   return (
-    <header className="fixed top-0 w-full h-16 bg-neutral-600/75 z-40">
+    <header className="fixed top-0 w-full h-16 bg-black/50 z-40">
         <div className="container mx-auto px-3 flex items-center h-full">
             <Link to={"/"}>
               <img 
@@ -38,7 +38,7 @@ const Header = () => {
               {
                 navigation.map((nav,index)=>{
                   return(
-                    <div>
+                    <div key={nav.label+"navigation"+index}>
                       <NavLink key={nav.label} to={nav.href} className={({isActive})=>`px-2 hover:text-neutral-100 ${isActive && 'text-neutral-100'}`} >
                         {nav.label}
                       </NavLink>

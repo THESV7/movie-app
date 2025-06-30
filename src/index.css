@@ -5,6 +5,7 @@
   body {
     @apply bg-neutral-900 text-neutral-300;
     font-family: "Nunito", sans-serif;
+    scroll-behavior: smooth;
   }
 
   button {
