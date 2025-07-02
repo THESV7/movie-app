@@ -1,86 +1,128 @@
-import axios from 'axios';
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Card from '../components/Card';
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Card from "../components/Card";
 
 const SearchPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const query = new URLSearchParams(location.search).get("q") || "";
 
-  const fetchData = async () => {
+  const fetchData = async (reset = false) => {
+    if (!query.trim()) return;
+
     try {
+      setLoading(true);
+      setHasSearched(true); // ✅ Mark that we've attempted a search
+
       const response = await axios.get(`/search/multi`, {
         params: {
           query: query,
-          page: page,
+          page: reset ? 1 : page,
         },
       });
 
-      setData((prev) => {
-        const combined = [...prev, ...response.data.results];
-        const unique = Array.from(
-          new Map(
-            combined.map((item) => [`${item.media_type}-${item.id}`, item])
-          ).values()
-        );
-        return unique;
-      });
+      const newResults = response.data.results || [];
+
+      if (reset) {
+        setHasMore(newResults.length > 0);
+      } else if (newResults.length === 0) {
+        setHasMore(false);
+      }
+
+      const combined = reset ? newResults : [...data, ...newResults];
+      const unique = Array.from(
+        new Map(
+          combined.map((item) => [`${item.media_type}-${item.id}`, item])
+        ).values()
+      );
+
+      setData(unique);
     } catch (error) {
-      console.log('error', error);
+      console.log("error", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     setPage(1);
     setData([]);
-    fetchData();
+    setHasMore(true);
+    setHasSearched(false); // ✅ Reset when query changes
+    fetchData(true);
   }, [query]);
 
   useEffect(() => {
-    if (page > 1) fetchData();
+    if (page > 1 && hasMore) fetchData();
   }, [page]);
 
   useEffect(() => {
     const handleScroll = () => {
-      if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 10) {
-        setPage(prev => prev + 1);
+      if (
+        hasMore &&
+        !loading &&
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 10
+      ) {
+        setPage((prev) => prev + 1);
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loading, hasMore]);
 
   return (
-    <div className='py-16'>
-      <div className='lg:hidden my-2 mx-1 sticky top-[70px] z-30'>
+    <div className="py-16">
+      <div className="lg:hidden my-2 mx-1 sticky top-[70px] z-30">
         <input
           type="text"
-          placeholder='Search here...'
+          placeholder="Search here..."
           value={query}
           onChange={(e) => navigate(`/search?q=${e.target.value}`)}
-          className='px-4 py-1 text-lg w-full bg-white rounded-full text-neutral-900'
+          className="px-4 py-1 text-lg w-full bg-white rounded-full text-neutral-900"
         />
       </div>
 
-      <div className='container mx-auto'>
-        <h3 className="capitalize text-lg lg:text-xl font-semibold m-2 my-3">Search Results</h3>
+      <div className="container mx-auto">
+        <h3 className="capitalize text-lg lg:text-xl font-semibold m-2 my-3">
+          Search Results
+        </h3>
 
-        <div className="grid grid-cols-[repeat(auto-fit,230px)] gap-6 justify-center lg:justify-start">
-          {
-            data.map((searchData, index) => (
+        {/* ✅ Show "No results" only after search attempt */}
+        {!loading && hasSearched && query.trim() && data.length === 0 && (
+          <p className="text-center text-neutral-400 text-lg py-10">
+            No results found for "<span className="font-semibold">{query}</span>"
+          </p>
+        )}
+
+        {loading && page === 1 ? (
+          <div className="w-full flex justify-center items-center h-32 text-white">
+            <div className="animate-spin rounded-full border-4 border-white border-t-red-500 w-10 h-10 mr-3"></div>
+            <span>Loading results...</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fit,230px)] gap-6 justify-center lg:justify-start">
+            {data.map((searchData) => (
               <Card
                 key={`${searchData.media_type}-${searchData.id}`}
                 data={searchData}
                 media_type={searchData.media_type}
               />
-            ))
-          }
-        </div>
+            ))}
+          </div>
+        )}
+
+        {/* Loader when loading more */}
+        {loading && page > 1 && hasMore && (
+          <div className="text-center py-4 text-white">Loading more...</div>
+        )}
       </div>
     </div>
   );

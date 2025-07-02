@@ -1,30 +1,42 @@
-import { useSelector } from "react-redux"
-import BannerHome from "../components/BannerHome"
-import Card from "../components/Card"
-import HorizontalScrollCard from "../components/HorizontalScrollCard"
-import { useEffect, useState } from "react"
-import axios from "axios"
-import useFetch from "../hooks/useFetch"
+import { useSelector } from "react-redux";
+import BannerHome from "../components/BannerHome";
+import HorizontalScrollCard from "../components/HorizontalScrollCard";
+import useFetch from "../hooks/useFetch";
 
 const Home = () => {
-  const trendingData = useSelector(state => state.movieData.bannerData)
-  const { data : nowPlayingData } = useFetch("/movie/now_playing")
-  const { data : topRatedData } = useFetch("/movie/top_rated")
-  const { data : popularTvShowData } = useFetch("/tv/popular")
-  const { data : onTheAirShowData } = useFetch("/tv/on_the_air")
+  const trendingData = useSelector(state => state.movieData.bannerData);
+
+  const { data: nowPlayingData, loading: loadingNowPlaying } = useFetch("/movie/now_playing");
+  const { data: topRatedData, loading: loadingTopRated } = useFetch("/movie/top_rated");
+  const { data: popularTvShowData, loading: loadingPopularTv } = useFetch("/tv/popular");
+  const { data: onTheAirShowData, loading: loadingOnTheAir } = useFetch("/tv/on_the_air");
+
+  const isLoading = 
+    loadingNowPlaying || 
+    loadingTopRated || 
+    loadingPopularTv || 
+    loadingOnTheAir || 
+    !trendingData?.length;
+
+  if (isLoading) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-black text-white">
+        <div className="animate-spin rounded-full border-4 border-white border-t-red-500 w-12 h-12"></div>
+        <p className="ml-4">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <BannerHome/>
+      <BannerHome />
       <HorizontalScrollCard data={trendingData} heading={"Trending"} trending={true} />
-      <HorizontalScrollCard data={nowPlayingData} heading={"Now Playing"} media_type={"movie"}/>
-      <HorizontalScrollCard data={topRatedData} heading={"Top Rated Movies"} media_type={"movie"}/>
-      <HorizontalScrollCard data={popularTvShowData} heading={"Popular TV Shows"} media_type={"tv"}/>
-      <HorizontalScrollCard data={onTheAirShowData} heading={"On The Air"} media_type={"tv"}/>
-      
-      
+      <HorizontalScrollCard data={nowPlayingData} heading={"Now Playing"} media_type={"movie"} />
+      <HorizontalScrollCard data={topRatedData} heading={"Top Rated Movies"} media_type={"movie"} />
+      <HorizontalScrollCard data={popularTvShowData} heading={"Popular TV Shows"} media_type={"tv"} />
+      <HorizontalScrollCard data={onTheAirShowData} heading={"On The Air"} media_type={"tv"} />
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

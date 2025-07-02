@@ -8,70 +8,88 @@ const ExplorePage = () => {
   const [pageNo, setPageNo] = useState(1);
   const [data, setData] = useState([]);
   const [totalPageNo, setTotalPageNo] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
+    if (loading || (totalPageNo && pageNo > totalPageNo)) return;
+
     try {
+      setLoading(true);
       const response = await axios.get(`/discover/${params.explore}`, {
-        params: {
-          page: pageNo,
-        },
+        params: { page: pageNo },
       });
 
-      setData((prev) => {
-        const combined = [...prev, ...response.data.results];
+      const newResults = response.data.results || [];
 
-        // Remove duplicates based on ID
+      setData((prev) => {
+        const combined = [...prev, ...newResults];
         const unique = Array.from(
           new Map(combined.map((item) => [item.id, item])).values()
         );
-
         return unique;
       });
 
       setTotalPageNo(response.data.total_pages);
     } catch (error) {
       console.log("error", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleScroll = () => {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
-      setPageNo((prev) => prev + 1);
-    }
-  };
+  useEffect(() => {
+    setPageNo(1);
+    setData([]);
+    setTotalPageNo(0);
+    fetchData();
+  }, [params.explore]);
 
   useEffect(() => {
     fetchData();
   }, [pageNo]);
 
   useEffect(() => {
-    setPageNo(1);
-    setData([]);
-    fetchData();
-  }, [params.explore]);
+    const handleScroll = () => {
+      if (
+        !loading &&
+        pageNo < totalPageNo &&
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 10
+      ) {
+        setPageNo((prev) => prev + 1);
+      }
+    };
 
-  useEffect(() => {
     window.addEventListener("scroll", handleScroll);
-  }, []);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loading, pageNo, totalPageNo]);
 
   return (
     <div className="py-16">
       <div className="container mx-auto">
         <h3 className="capitalize text-lg lg:text-xl font-semibold m-2 my-3">
-          Popular {params.explore} show
+          Popular {params.explore} Show
         </h3>
 
-        <div className="grid grid-cols-[repeat(auto-fit,230px)] gap-6 justify-center lg:justify-start">
-          {data.map((exploreData, index) => {
-            return (
+        {loading && pageNo === 1 ? (
+          <div className="w-full flex justify-center items-center h-32 text-white">
+            <div className="animate-spin rounded-full border-4 border-white border-t-red-500 w-10 h-10 mr-3"></div>
+            <span>Loading content...</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fit,230px)] gap-6 justify-center lg:justify-start">
+            {data.map((exploreData) => (
               <Card
-                data={exploreData}
                 key={exploreData.id + "exploreSection"}
+                data={exploreData}
                 media_type={params.explore}
               />
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {loading && pageNo > 1 && (
+          <div className="text-center py-4 text-white">Loading more...</div>
+        )}
       </div>
     </div>
   );

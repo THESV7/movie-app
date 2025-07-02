@@ -2,25 +2,26 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 
 const useFetch = (endpoint) => {
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(false);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true); // default to true
 
-    const fetchData = async () => {
-        try {
-            setLoading(true)
-            const response = await axios.get(endpoint);
-            setLoading(false)
-            setData(response.data.results);
-        } catch (error) { 
-            console.log('error',error);
-        }
-    };
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(endpoint);
+      setData(response.data.results);
+    } catch (error) {
+      console.log('Fetch error:', error);
+    } finally {
+      setLoading(false); // always runs
+    }
+  };
 
-    useEffect(()=>{
-        fetchData();
-    },[])
+  useEffect(() => {
+    fetchData();
+  }, [endpoint]); // re-run when endpoint changes
 
-    return { data, loading };
+  return { data, loading };
 };
 
 export default useFetch;

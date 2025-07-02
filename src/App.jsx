@@ -36,14 +36,14 @@ function App() {
   },[])
 
   return (
-    <main className="pb-14 lg:pb-0">
-      <Header/>
-      <div className="min-h-[90vh]">
-        <Outlet/>
-      </div>
-      <Footer/> 
-      <MobileNavigation/>
-    </main>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-grow pb-16 lg:pb-0">
+        <Outlet />
+      </main>
+      <Footer />
+      <MobileNavigation />
+    </div>
   )
 }
 
