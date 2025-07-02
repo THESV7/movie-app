@@ -1,22 +1,29 @@
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.png';
+import logo_text from '../assets/logo_text.png'
+import logo from '../assets/loggo.png'
 import userIcon from '../assets/user.png';
 import { IoSearchOutline } from "react-icons/io5";
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { navigation } from '../constants/navigation';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState("");
+  const isFirstRender = useRef(true); // 👈 new
 
   useEffect(() => {
     const query = new URLSearchParams(location.search).get("q");
     setSearchInput(query || "");
   }, [location.search]);
 
-  // ✅ Debounce navigate
- useEffect(() => {
+  useEffect(() => {
+    // Skip debounce on first render
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     const delayDebounce = setTimeout(() => {
       navigate(`/search?q=${searchInput.trim()}`);
     }, 500);
@@ -34,8 +41,9 @@ const Header = () => {
   return (
     <header className="fixed top-0 w-full h-16 bg-black/50 z-40">
       <div className="container mx-auto px-3 flex items-center h-full">
-        <Link to={"/"}>
-          <img src={logo} alt="logo" width={120} />
+        <Link to={"/"} className='flex items-center gap-2'>
+          <img className='w-[40px]' src={logo} alt="logo" />
+          <img className='w-[120px] h-fit' src={logo_text} alt="logo-text" />
         </Link>
 
         <nav className='hidden lg:flex items-center gap-1 ml-5'>
