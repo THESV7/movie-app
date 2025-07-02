@@ -35,6 +35,9 @@ const BannerHome = () => {
         return () => clearInterval(interval);
     }, [bannerData, currentImage]);
 
+    console.log(bannerData);
+    
+
     return (
         <section className="w-full h-full">
             <div className="flex min-h-full max-h-[95vh] overflow-hidden">
