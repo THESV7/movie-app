@@ -76,7 +76,15 @@ const Header = () => {
               onChange={(e) => setSearchInput(e.target.value)}
               value={searchInput}
             />
-            <button type="submit">
+            <button
+              type="submit"
+              onClick={() => {
+                if (window.innerWidth < 1024) {
+                  // Mobile screen: redirect to search page
+                  navigate("/search");
+                }
+              }}
+            >
               <IoSearchOutline className="text-2xl text-white cursor-pointer" />
             </button>
           </form>
