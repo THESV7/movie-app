@@ -84,7 +84,7 @@ const ExplorePage = () => {
           Popular {params.explore} Show
         </h3>
 
-        <div className="grid grid-cols-[repeat(auto-fit,230px)] gap-6 justify-center lg:justify-start">
+        <div className="grid grid-cols-[repeat(auto-fit,230px)] gap-6 justify-center">
           {data.map((exploreData) => (
             <Card
               key={exploreData.id + "exploreSection"}

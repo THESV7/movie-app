@@ -1,6 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
 @import "tailwindcss";
 
+@utility container {
+  width: 100%;
+  margin-inline: auto;
+
+  @media (min-width: 1500px) and (max-width: 1536px) {
+    padding-inline: 5rem !important; /* or any value you want */
+  }
+}
+
 @layer base {
   body {
     @apply bg-neutral-900 text-neutral-300;
