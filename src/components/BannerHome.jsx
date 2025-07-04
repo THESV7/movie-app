@@ -34,8 +34,6 @@ const BannerHome = () => {
 
         return () => clearInterval(interval);
     }, [bannerData, currentImage]);
-
-    console.log(bannerData);
     
 
     return (
