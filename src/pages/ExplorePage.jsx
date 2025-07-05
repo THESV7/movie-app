@@ -41,6 +41,7 @@ const ExplorePage = () => {
   };
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     setPageNo(1);
     setData([]);
     setTotalPageNo(0);
