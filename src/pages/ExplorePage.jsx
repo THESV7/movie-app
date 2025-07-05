@@ -9,16 +9,19 @@ const ExplorePage = () => {
   const [data, setData] = useState([]);
   const [totalPageNo, setTotalPageNo] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true); // ✅
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  const fetchData = async () => {
-    if (loading || (totalPageNo && pageNo > totalPageNo)) return;
+  const fetchData = async (overridePage = null) => {
+    const currentPage = overridePage ?? pageNo;
+
+    if (loading || !params.explore) return;
+    if (totalPageNo > 0 && currentPage > totalPageNo) return;
 
     try {
       setLoading(true);
 
       const response = await axios.get(`/discover/${params.explore}`, {
-        params: { page: pageNo },
+        params: { page: currentPage },
       });
 
       const newResults = response.data.results || [];
@@ -31,32 +34,40 @@ const ExplorePage = () => {
         return unique;
       });
 
-      setTotalPageNo(response.data.total_pages);
+      setTotalPageNo(response.data.total_pages || 1);
     } catch (error) {
-      console.log("error", error);
+      console.error("❌ Fetch error:", error);
     } finally {
       setLoading(false);
-      setInitialLoading(false); // ✅
+      if (currentPage === 1) {
+        setInitialLoading(false);
+      }
     }
   };
 
+  // When route changes
   useEffect(() => {
     window.scrollTo(0, 0);
-    setPageNo(1);
     setData([]);
     setTotalPageNo(0);
-    setInitialLoading(true); // ✅ reset
-    fetchData();
+    setInitialLoading(true);
+
+    // Directly call fetchData with page = 1
+    fetchData(1);
+    setPageNo(1);
   }, [params.explore]);
 
+  // When user scrolls and triggers next page
   useEffect(() => {
-    if (pageNo > 1) fetchData();
+    if (pageNo === 1) return; // already fetched manually on route change
+    fetchData();
   }, [pageNo]);
 
   useEffect(() => {
     const handleScroll = () => {
       if (
         !loading &&
+        totalPageNo > 0 &&
         pageNo < totalPageNo &&
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 10
       ) {
@@ -68,7 +79,6 @@ const ExplorePage = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [loading, pageNo, totalPageNo]);
 
-  // ✅ Full page loader for initial load
   if (initialLoading) {
     return (
       <div className="w-screen h-screen flex items-center justify-center bg-black text-white">
