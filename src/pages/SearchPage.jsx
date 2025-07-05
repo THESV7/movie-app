@@ -1,6 +1,6 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
 import Card from "../components/Card";
 
 const SearchPage = () => {
@@ -11,19 +11,20 @@ const SearchPage = () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [hasSearched, setHasSearched] = useState(false);
+  const [mobileQuery, setMobileQuery] = useState("");
 
   const query = new URLSearchParams(location.search).get("q") || "";
 
   const fetchData = async (reset = false) => {
-    if (!query.trim()) return;
+    if (!query) return;
 
     try {
       setLoading(true);
-      setHasSearched(true); // ✅ Mark that we've attempted a search
+      setHasSearched(true);
 
       const response = await axios.get(`/search/multi`, {
         params: {
-          query: query,
+          query,
           page: reset ? 1 : page,
         },
       });
@@ -38,9 +39,7 @@ const SearchPage = () => {
 
       const combined = reset ? newResults : [...data, ...newResults];
       const unique = Array.from(
-        new Map(
-          combined.map((item) => [`${item.media_type}-${item.id}`, item])
-        ).values()
+        new Map(combined.map((item) => [`${item.media_type}-${item.id}`, item])).values()
       );
 
       setData(unique);
@@ -52,10 +51,11 @@ const SearchPage = () => {
   };
 
   useEffect(() => {
+    setMobileQuery(query); // sync local input with URL query param
     setPage(1);
     setData([]);
     setHasMore(true);
-    setHasSearched(false); // ✅ Reset when query changes
+    setHasSearched(false);
     fetchData(true);
   }, [query]);
 
@@ -78,14 +78,31 @@ const SearchPage = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [loading, hasMore]);
 
+  // Debounce URL update on mobileQuery changes
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      // Only update URL (navigate) if value differs and is not empty
+      if (mobileQuery !== query) {
+        if (mobileQuery.trim()) {
+          navigate(`/search?q=${encodeURIComponent(mobileQuery)}`);
+        } else {
+          // Optional: navigate to blank search page if input cleared
+          navigate("/search");
+        }
+      }
+    }, 500); // 500ms debounce delay
+
+    return () => clearTimeout(handler);
+  }, [mobileQuery, navigate, query]);
+
   return (
     <div className="py-16">
       <div className="lg:hidden my-2 mx-1 sticky top-[70px] z-30">
         <input
           type="text"
           placeholder="Search here..."
-          value={query}
-          onChange={(e) => navigate(`/search?q=${e.target.value}`)}
+          value={mobileQuery}
+          onChange={(e) => setMobileQuery(e.target.value)}
           className="px-4 py-1 text-lg w-full bg-white rounded-full text-neutral-900"
         />
       </div>
@@ -95,8 +112,7 @@ const SearchPage = () => {
           Search Results
         </h3>
 
-        {/* ✅ Show "No results" only after search attempt */}
-        {!loading && hasSearched && query.trim() && data.length === 0 && (
+        {!loading && hasSearched && query && data.length === 0 && (
           <p className="text-center text-neutral-400 text-lg py-10">
             No results found for "<span className="font-semibold">{query}</span>"
           </p>
@@ -119,7 +135,6 @@ const SearchPage = () => {
           </div>
         )}
 
-        {/* Loader when loading more */}
         {loading && page > 1 && hasMore && (
           <div className="text-center py-4 text-white">Loading more...</div>
         )}
